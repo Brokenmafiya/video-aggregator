@@ -18,7 +18,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
     const page = parseInt(sp.page || '1');
     const perPage = 24;
 
-    const { videos, total, categoryName } = getVideosByCategory(slug, page, perPage);
+    const { videos, total, categoryName } = await getVideosByCategory(slug, page, perPage);
     if (!categoryName) notFound();
 
     const totalPages = Math.ceil(total / perPage);

@@ -15,11 +15,11 @@ export const dynamic = 'force-dynamic';
 
 export default async function VideoPage({ params }: PageProps) {
     const { slug } = await params;
-    const video = getVideoBySlug(slug);
+    const video = await getVideoBySlug(slug);
 
     if (!video) notFound();
 
-    incrementViews(slug);
+    await incrementViews(slug);
 
     const isDirectVideo = video.embed_url.endsWith('.mp4') ||
         video.embed_url.endsWith('.webm') ||
@@ -29,7 +29,7 @@ export default async function VideoPage({ params }: PageProps) {
     const tags = (video.tags || '').split(',').map(t => t.trim()).filter(Boolean);
 
     // Related videos (Optimized SQL query)
-    const related = getRelatedVideos(slug, tags, 10);
+    const related = await getRelatedVideos(slug, tags, 10);
 
     return (
         <main className="min-h-screen bg-[hsl(240,10%,4%)]">

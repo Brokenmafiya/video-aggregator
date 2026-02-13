@@ -17,82 +17,119 @@ export interface Video {
 
 // ─── Basic Queries ───
 
-export function getVideos(): Video[] {
-    return db.prepare('SELECT * FROM videos ORDER BY created_at DESC').all() as Video[];
+export async function getVideos(): Promise<Video[]> {
+    const result = await db.execute('SELECT * FROM videos ORDER BY created_at DESC');
+    return result.rows as unknown as Video[];
 }
 
-export function getVideoBySlug(slug: string): Video | undefined {
-    return db.prepare('SELECT * FROM videos WHERE slug = ?').get(slug) as Video | undefined;
+export async function getVideoBySlug(slug: string): Promise<Video | undefined> {
+    const result = await db.execute({
+        sql: 'SELECT * FROM videos WHERE slug = ?',
+        args: [slug]
+    });
+    return result.rows[0] as unknown as Video | undefined;
 }
 
-export function createVideo(video: Partial<Video>) {
-    const stmt = db.prepare(`
-        INSERT INTO videos (title, slug, thumbnail_url, embed_url, duration, tags, description)
-        VALUES (@title, @slug, @thumbnail_url, @embed_url, @duration, @tags, @description)
-    `);
-    return stmt.run(video);
+export async function createVideo(video: Partial<Video>) {
+    return await db.execute({
+        sql: `INSERT INTO videos (title, slug, thumbnail_url, embed_url, duration, tags, description)
+              VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        args: [
+            video.title || '',
+            video.slug || '',
+            video.thumbnail_url || '',
+            video.embed_url || '',
+            video.duration || '',
+            video.tags || '',
+            video.description || ''
+        ]
+    });
 }
 
-export function incrementViews(slug: string) {
-    db.prepare('UPDATE videos SET views = views + 1 WHERE slug = ?').run(slug);
+export async function incrementViews(slug: string) {
+    await db.execute({
+        sql: 'UPDATE videos SET views = views + 1 WHERE slug = ?',
+        args: [slug]
+    });
 }
 
 // ─── Pagination ───
 
-export function getVideosPaginated(page: number, perPage: number = 24, sort: string = 'newest'): { videos: Video[]; total: number } {
+export async function getVideosPaginated(page: number, perPage: number = 24, sort: string = 'newest'): Promise<{ videos: Video[]; total: number }> {
     const offset = (page - 1) * perPage;
 
     let orderBy = 'created_at DESC';
     if (sort === 'popular') orderBy = 'views DESC';
     if (sort === 'longest') orderBy = "CAST(REPLACE(REPLACE(duration, ':', ''), ' ', '') AS INTEGER) DESC";
 
-    const videos = db.prepare(`SELECT * FROM videos ORDER BY ${orderBy} LIMIT ? OFFSET ?`).all(perPage, offset) as Video[];
-    const total = (db.prepare('SELECT COUNT(*) as count FROM videos').get() as { count: number }).count;
+    const videosResult = await db.execute({
+        sql: `SELECT * FROM videos ORDER BY ${orderBy} LIMIT ? OFFSET ?`,
+        args: [perPage, offset]
+    });
 
-    return { videos, total };
+    const countResult = await db.execute('SELECT COUNT(*) as count FROM videos');
+    const total = Number(countResult.rows[0].count);
+
+    return { videos: videosResult.rows as unknown as Video[], total };
 }
 
 // ─── Search ───
 
-export function searchVideos(query: string, page: number = 1, perPage: number = 24): { videos: Video[]; total: number } {
+export async function searchVideos(query: string, page: number = 1, perPage: number = 24): Promise<{ videos: Video[]; total: number }> {
     const offset = (page - 1) * perPage;
     const like = `%${query}%`;
 
-    const videos = db.prepare(`
-        SELECT * FROM videos
-        WHERE title LIKE ? OR tags LIKE ? OR description LIKE ?
-        ORDER BY views DESC
-        LIMIT ? OFFSET ?
-    `).all(like, like, like, perPage, offset) as Video[];
+    const videosResult = await db.execute({
+        sql: `
+            SELECT * FROM videos
+            WHERE title LIKE ? OR tags LIKE ? OR description LIKE ?
+            ORDER BY views DESC
+            LIMIT ? OFFSET ?
+        `,
+        args: [like, like, like, perPage, offset]
+    });
 
-    const total = (db.prepare(`
-        SELECT COUNT(*) as count FROM videos
-        WHERE title LIKE ? OR tags LIKE ? OR description LIKE ?
-    `).get(like, like, like) as { count: number }).count;
+    const countResult = await db.execute({
+        sql: `
+            SELECT COUNT(*) as count FROM videos
+            WHERE title LIKE ? OR tags LIKE ? OR description LIKE ?
+        `,
+        args: [like, like, like]
+    });
+    const total = Number(countResult.rows[0].count);
 
-    return { videos, total };
+    return { videos: videosResult.rows as unknown as Video[], total };
 }
 
 // ─── Tags ───
 
-export function getVideosByTag(tag: string, page: number = 1, perPage: number = 24): { videos: Video[]; total: number } {
+export async function getVideosByTag(tag: string, page: number = 1, perPage: number = 24): Promise<{ videos: Video[]; total: number }> {
     const offset = (page - 1) * perPage;
     const like = `%${tag}%`;
 
-    const videos = db.prepare('SELECT * FROM videos WHERE tags LIKE ? ORDER BY created_at DESC LIMIT ? OFFSET ?')
-        .all(like, perPage, offset) as Video[];
-    const total = (db.prepare('SELECT COUNT(*) as count FROM videos WHERE tags LIKE ?').get(like) as { count: number }).count;
+    const videosResult = await db.execute({
+        sql: 'SELECT * FROM videos WHERE tags LIKE ? ORDER BY created_at DESC LIMIT ? OFFSET ?',
+        args: [like, perPage, offset]
+    });
 
-    return { videos, total };
+    const countResult = await db.execute({
+        sql: 'SELECT COUNT(*) as count FROM videos WHERE tags LIKE ?',
+        args: [like]
+    });
+    const total = Number(countResult.rows[0].count);
+
+    return { videos: videosResult.rows as unknown as Video[], total };
 }
 
-export function getRelatedVideos(slug: string, tags: string[], limit: number = 10): Video[] {
+export async function getRelatedVideos(slug: string, tags: string[], limit: number = 10): Promise<Video[]> {
     if (tags.length === 0) {
-        return db.prepare('SELECT * FROM videos WHERE slug != ? ORDER BY views DESC LIMIT ?').all(slug, limit) as Video[];
+        const res = await db.execute({
+            sql: 'SELECT * FROM videos WHERE slug != ? ORDER BY views DESC LIMIT ?',
+            args: [slug, limit]
+        });
+        return res.rows as unknown as Video[];
     }
 
-    // Build weighted scoring query: for each tag, if it matches, add 1 to the score
-    const conditions = tags.map(() => 'WHEN tags LIKE ? THEN 1').join(' ');
     const sql = `
         SELECT *, 
         (${tags.map(() => 'CASE WHEN tags LIKE ? THEN 1 ELSE 0 END').join(' + ')}) as score
@@ -103,11 +140,13 @@ export function getRelatedVideos(slug: string, tags: string[], limit: number = 1
     `;
 
     const params = [...tags.map(t => `%${t}%`), slug, limit];
-    return db.prepare(sql).all(...params) as Video[];
+    const res = await db.execute({ sql, args: params });
+    return res.rows as unknown as Video[];
 }
 
-export function getAllTags(): { tag: string; count: number }[] {
-    const videos = db.prepare('SELECT tags FROM videos WHERE tags IS NOT NULL AND tags != ""').all() as { tags: string }[];
+export async function getAllTags(): Promise<{ tag: string; count: number }[]> {
+    const result = await db.execute('SELECT tags FROM videos WHERE tags IS NOT NULL AND tags != ""');
+    const videos = result.rows as unknown as { tags: string }[];
     const tagMap = new Map<string, number>();
 
     for (const v of videos) {
@@ -137,16 +176,20 @@ const CATEGORIES = [
     { name: 'Big Boobs', slug: 'big-boobs', keywords: ['big boobs', 'bade boobs', 'big tits'] },
 ];
 
-export function getCategories(): { name: string; slug: string; count: number }[] {
-    return CATEGORIES.map(cat => {
+export async function getCategories(): Promise<{ name: string; slug: string; count: number }[]> {
+    const categoriesWithCount = await Promise.all(CATEGORIES.map(async cat => {
         const conditions = cat.keywords.map(() => `(title LIKE ? OR tags LIKE ?)`).join(' OR ');
         const values = cat.keywords.flatMap(k => [`%${k}%`, `%${k}%`]);
-        const result = db.prepare(`SELECT COUNT(*) as count FROM videos WHERE ${conditions}`).get(...values) as { count: number };
-        return { name: cat.name, slug: cat.slug, count: result.count };
-    }).filter(c => c.count > 0);
+        const result = await db.execute({
+            sql: `SELECT COUNT(*) as count FROM videos WHERE ${conditions}`,
+            args: values
+        });
+        return { name: cat.name, slug: cat.slug, count: Number(result.rows[0].count) };
+    }));
+    return categoriesWithCount.filter(c => c.count > 0);
 }
 
-export function getVideosByCategory(categorySlug: string, page: number = 1, perPage: number = 24): { videos: Video[]; total: number; categoryName: string } {
+export async function getVideosByCategory(categorySlug: string, page: number = 1, perPage: number = 24): Promise<{ videos: Video[]; total: number; categoryName: string }> {
     const cat = CATEGORIES.find(c => c.slug === categorySlug);
     if (!cat) return { videos: [], total: 0, categoryName: '' };
 
@@ -154,19 +197,32 @@ export function getVideosByCategory(categorySlug: string, page: number = 1, perP
     const conditions = cat.keywords.map(() => `(title LIKE ? OR tags LIKE ?)`).join(' OR ');
     const values = cat.keywords.flatMap(k => [`%${k}%`, `%${k}%`]);
 
-    const videos = db.prepare(`SELECT * FROM videos WHERE ${conditions} ORDER BY created_at DESC LIMIT ? OFFSET ?`)
-        .all(...values, perPage, offset) as Video[];
-    const total = (db.prepare(`SELECT COUNT(*) as count FROM videos WHERE ${conditions}`).get(...values) as { count: number }).count;
+    const videosResult = await db.execute({
+        sql: `SELECT * FROM videos WHERE ${conditions} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+        args: [...values, perPage, offset]
+    });
 
-    return { videos, total, categoryName: cat.name };
+    const countResult = await db.execute({
+        sql: `SELECT COUNT(*) as count FROM videos WHERE ${conditions}`,
+        args: values
+    });
+    const total = Number(countResult.rows[0].count);
+
+    return { videos: videosResult.rows as unknown as Video[], total, categoryName: cat.name };
 }
 
 // ─── Likes ───
 
-export function likeVideo(slug: string) {
-    db.prepare('UPDATE videos SET likes = likes + 1 WHERE slug = ?').run(slug);
+export async function likeVideo(slug: string) {
+    await db.execute({
+        sql: 'UPDATE videos SET likes = likes + 1 WHERE slug = ?',
+        args: [slug]
+    });
 }
 
-export function dislikeVideo(slug: string) {
-    db.prepare('UPDATE videos SET dislikes = dislikes + 1 WHERE slug = ?').run(slug);
+export async function dislikeVideo(slug: string) {
+    await db.execute({
+        sql: 'UPDATE videos SET dislikes = dislikes + 1 WHERE slug = ?',
+        args: [slug]
+    });
 }

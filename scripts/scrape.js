@@ -1,32 +1,30 @@
 require('dotenv').config();
 const cheerio = require('cheerio');
-const Database = require('better-sqlite3');
-const path = require('path');
+const { createClient } = require('@libsql/client');
 
-const db = new Database(path.join(__dirname, '..', 'videos.db'));
+const db = createClient({
+    url: process.env.TURSO_DATABASE_URL || 'file:videos.db',
+    authToken: process.env.TURSO_AUTH_TOKEN,
+});
 
-// Ensure table exists with all columns
-db.exec(`
-  CREATE TABLE IF NOT EXISTS videos (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT NOT NULL,
-    slug TEXT UNIQUE NOT NULL,
-    thumbnail_url TEXT,
-    embed_url TEXT NOT NULL,
-    duration TEXT,
-    views INTEGER DEFAULT 0,
-    tags TEXT DEFAULT '',
-    description TEXT DEFAULT '',
-    likes INTEGER DEFAULT 0,
-    dislikes INTEGER DEFAULT 0,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-`);
-
-const insertStmt = db.prepare(`
-  INSERT OR IGNORE INTO videos (title, slug, thumbnail_url, embed_url, duration, tags, description)
-  VALUES (@title, @slug, @thumbnail_url, @embed_url, @duration, @tags, @description)
-`);
+async function initDb() {
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS videos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        slug TEXT UNIQUE NOT NULL,
+        thumbnail_url TEXT,
+        embed_url TEXT NOT NULL,
+        duration TEXT,
+        views INTEGER DEFAULT 0,
+        tags TEXT DEFAULT '',
+        description TEXT DEFAULT '',
+        likes INTEGER DEFAULT 0,
+        dislikes INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+}
 
 // ─── Predefined sites with known structures ───
 const SITES = {
@@ -514,8 +512,11 @@ async function scrapeSite(siteKey, maxPages = 2) {
 
             for (const url of videoUrls) {
                 const slug = extractSlug(url);
-                const existing = db.prepare('SELECT id FROM videos WHERE slug = ?').get(slug);
-                if (existing) { skipped++; continue; }
+                const existingResult = await db.execute({
+                    sql: 'SELECT id FROM videos WHERE slug = ?',
+                    args: [slug]
+                });
+                if (existingResult.rows.length > 0) { skipped++; continue; }
 
                 console.log(`  → ${slug}`);
                 const video = await scrapeVideoPage(url, site.base);
@@ -549,6 +550,8 @@ async function main() {
     console.log('🎬 Multi-Site Video Scraper');
     console.log('===========================\n');
 
+    await initDb();
+
     if (mode === 'single') {
         const url = args[1];
         if (!url) { console.error('Usage: node scrape.js single <video_url>'); return; }
@@ -558,12 +561,10 @@ async function main() {
             if (success) console.log(`✓ Added: ${video.title}`);
         }
     } else if (mode === 'site') {
-        // Scrape specific site: node scrape.js site <site_key> <max_pages>
         const siteKey = args[1];
         const maxPages = parseInt(args[2] || '2');
         await scrapeSite(siteKey, maxPages);
     } else if (mode === 'listing') {
-        // Legacy: scrape listing URL directly
         const target = args[1];
         const maxPages = parseInt(args[2] || '1');
         const base = new URL(target).origin;
@@ -575,8 +576,11 @@ async function main() {
 
             for (const url of videoUrls) {
                 const slug = extractSlug(url);
-                const existing = db.prepare('SELECT id FROM videos WHERE slug = ?').get(slug);
-                if (existing) continue;
+                const existingResult = await db.execute({
+                    sql: 'SELECT id FROM videos WHERE slug = ?',
+                    args: [slug]
+                });
+                if (existingResult.rows.length > 0) continue;
 
                 const video = await scrapeVideoPage(url, base);
                 if (video) {
@@ -588,7 +592,6 @@ async function main() {
         }
         console.log(`\n✅ Added ${added} videos`);
     } else if (mode === 'all') {
-        // Scrape ALL configured sites
         const maxPages = parseInt(args[1] || '2');
         let totalAdded = 0;
         for (const key of Object.keys(SITES)) {
@@ -602,9 +605,8 @@ async function main() {
         console.log(`\n🎉 Grand total: ${totalAdded} new videos added`);
     }
 
-    const count = db.prepare('SELECT COUNT(*) as c FROM videos').get();
-    console.log(`\n📊 Total videos in database: ${count.c}`);
-    db.close();
+    const countResult = await db.execute('SELECT COUNT(*) as c FROM videos');
+    console.log(`\n📊 Total videos in database: ${countResult.rows[0].c}`);
 }
 
 main().catch(console.error);

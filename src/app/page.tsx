@@ -19,11 +19,11 @@ export default async function Home({ searchParams }: PageProps) {
     const sort = params.sort || 'newest';
     const perPage = 24;
 
-    const { videos, total } = getVideosPaginated(page, perPage, sort);
+    const { videos, total } = await getVideosPaginated(page, perPage, sort);
     const totalPages = Math.ceil(total / perPage);
 
     let categories: { name: string; slug: string; count: number }[] = [];
-    try { categories = getCategories(); } catch { }
+    try { categories = await getCategories(); } catch { }
 
     // Split videos for in-feed ad insertion
     const firstRow = videos.slice(0, 12);

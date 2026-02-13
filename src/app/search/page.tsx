@@ -16,7 +16,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
     const page = parseInt(sp.page || '1');
     const perPage = 24;
 
-    const { videos, total } = query ? searchVideos(query, page, perPage) : { videos: [], total: 0 };
+    const { videos, total } = query ? await searchVideos(query, page, perPage) : { videos: [], total: 0 };
     const totalPages = Math.ceil(total / perPage);
 
     return (

@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
             views: 0
         };
 
-        createVideo(video);
+        await createVideo(video);
 
         return NextResponse.json({ success: true, video }, { status: 201 });
     } catch (error) {

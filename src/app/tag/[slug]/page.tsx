@@ -18,7 +18,7 @@ export default async function TagPage({ params, searchParams }: PageProps) {
     const perPage = 24;
     const tag = decodeURIComponent(slug);
 
-    const { videos, total } = getVideosByTag(tag, page, perPage);
+    const { videos, total } = await getVideosByTag(tag, page, perPage);
     const totalPages = Math.ceil(total / perPage);
 
     return (

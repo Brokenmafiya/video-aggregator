@@ -13,15 +13,15 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
         }
 
-        const video = getVideoBySlug(slug);
+        const video = await getVideoBySlug(slug);
         if (!video) {
             return NextResponse.json({ error: 'Video not found' }, { status: 404 });
         }
 
         if (action === 'like') {
-            likeVideo(slug);
+            await likeVideo(slug);
         } else {
-            dislikeVideo(slug);
+            await dislikeVideo(slug);
         }
 
         return NextResponse.json({ success: true });
