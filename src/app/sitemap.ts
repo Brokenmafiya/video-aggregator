@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 import { getVideos, getAllTags } from '@/lib/videos';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-    const baseUrl = 'https://lumina-tube.vercel.app'; // Change this to your domain
+    const baseUrl = 'https://Mmsbpxxx.xyz';
 
     // Get all videos
     const videos = await getVideos();

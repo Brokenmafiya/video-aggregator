@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 
 export default function robots(): MetadataRoute.Robots {
-    const baseUrl = 'https://lumina-tube.vercel.app'; // Change this to your domain
+    const baseUrl = 'https://Mmsbpxxx.xyz';
 
     return {
         rules: {
