@@ -202,6 +202,7 @@ video-aggregator/
 - Auto-deploys from GitHub
 - Built-in CDN
 - Free tier: 100GB bandwidth
+- **⚠️ Note**: Vercel/Netlify ToS prohibits adult content. Use at your own risk or for testing. For strict compliance, use offshore hosting.
 
 ### VPS (DigitalOcean, AWS, Linode)
 ✅ **Best for**: Full control, persistent storage
