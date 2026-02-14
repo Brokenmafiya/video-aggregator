@@ -12,10 +12,10 @@ const STATIC_CATEGORIES = [
     { name: 'Homemade', slug: 'homemade' },
 ];
 
-export default function Footer() {
+export default async function Footer() {
     let tags: { tag: string; count: number }[] = [];
     try {
-        tags = getAllTags().slice(0, 20);
+        tags = (await getAllTags()).slice(0, 20);
     } catch { }
 
     return (
