@@ -8,15 +8,16 @@ interface AdBannerProps {
 /**
  * Ad Banner Component
  * 
- * Replace the placeholder content with actual ad network code.
- * Common ad networks for adult content:
- * - ExoClick
- * - TrafficJunky
- * - JuicyAds
- * - TrafficStars
+ * Monetization Guide:
+ * 1. Sign up for an ad network (e.g., ExoClick, TrafficJunky, JuicyAds).
+ * 2. Create an "Ad Zone" for each size (728x90, 300x250, etc.).
+ * 3. Copy the <script> or <iframe> code they give you.
+ * 4. Paste it inside the matching case below.
  * 
- * Example integration:
- * <script src="https://a.exoclick.com/ad_serve.js?id=YOUR_AD_ID"></script>
+ * Example (ExoClick):
+ * if (slot === 'header') {
+ *   return <script async type="application/javascript" src="https://a.magsrv.com/ad-provider.js"></script>;
+ * }
  */
 export default function AdBanner({ slot, className = '' }: AdBannerProps) {
     const config: Record<string, { width: string; height: string; label: string; bg: string }> = {
