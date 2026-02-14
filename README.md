@@ -111,8 +111,8 @@ turso db show video-aggregator --url
 turso db tokens create video-aggregator
 
 # 5. Add to .env
-TURSO_DATABASE_URL=libsql://video-aggregator-username.turso.io
-TURSO_AUTH_TOKEN=eyJhbGc...
+TURSO_DATABASE_URL=libsql://your-database-name.turso.io
+TURSO_AUTH_TOKEN=your-actual-token-here
 ```
 
 ### Migrating Existing Data to Turso
