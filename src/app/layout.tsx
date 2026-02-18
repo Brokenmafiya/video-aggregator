@@ -1,5 +1,6 @@
 import './globals.css';
 import type { Metadata } from 'next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const SITE_NAME = 'xxxmms';
 const SITE_URL = 'https://xxxmms.vercel.app';
@@ -74,6 +75,7 @@ export default function RootLayout({
             </head>
             <body className="bg-bg-primary text-text-primary font-outfit antialiased">
                 {children}
+                <SpeedInsights />
             </body>
         </html>
     );
