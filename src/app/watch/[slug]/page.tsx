@@ -6,12 +6,50 @@ import AdBanner from '@/components/AdBanner';
 import { getVideoBySlug, incrementViews, getRelatedVideos } from '@/lib/videos';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import type { Metadata } from 'next';
 
 interface PageProps {
     params: Promise<{ slug: string }>;
 }
 
 export const dynamic = 'force-dynamic';
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+    const { slug } = await params;
+    const video = await getVideoBySlug(slug);
+    if (!video) return { title: 'Video Not Found' };
+
+    const tags = (video.tags || '').split(',').map(t => t.trim()).filter(Boolean);
+    const title = `${video.title} - Watch Free Desi MMS`;
+    const description = video.description || `Watch ${video.title} for free. ${video.duration || ''} duration. HD quality desi MMS video. Stream online now at xxxmms.`;
+
+    return {
+        title,
+        description,
+        keywords: [
+            ...tags,
+            'desi mms', 'indian sex video', 'watch online', 'free porn',
+            'desi porn', 'indian amateur', slug.replace(/-/g, ' '),
+        ],
+        openGraph: {
+            type: 'video.other',
+            title,
+            description,
+            url: `https://xxxmms.vercel.app/watch/${slug}`,
+            images: video.thumbnail_url ? [{ url: video.thumbnail_url, width: 640, height: 480, alt: video.title }] : [],
+            videos: video.embed_url ? [{ url: video.embed_url }] : [],
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title,
+            description,
+            images: video.thumbnail_url ? [video.thumbnail_url] : [],
+        },
+        alternates: {
+            canonical: `https://xxxmms.vercel.app/watch/${slug}`,
+        },
+    };
+}
 
 export default async function VideoPage({ params }: PageProps) {
     const { slug } = await params;
@@ -31,9 +69,38 @@ export default async function VideoPage({ params }: PageProps) {
     // Related videos (Optimized SQL query)
     const related = await getRelatedVideos(slug, tags, 10);
 
+    // JSON-LD Structured Data
+    const jsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'VideoObject',
+        name: video.title,
+        description: video.description || `Watch ${video.title} for free at xxxmms`,
+        thumbnailUrl: video.thumbnail_url || '',
+        uploadDate: video.created_at || new Date().toISOString(),
+        duration: video.duration ? `PT${video.duration.replace(':', 'M').replace(':', 'S')}` : undefined,
+        contentUrl: video.embed_url,
+        embedUrl: video.embed_url,
+        interactionStatistic: {
+            '@type': 'InteractionCounter',
+            interactionType: 'https://schema.org/WatchAction',
+            userInteractionCount: video.views,
+        },
+        publisher: {
+            '@type': 'Organization',
+            name: 'xxxmms',
+            url: 'https://xxxmms.vercel.app',
+        },
+    };
+
     return (
         <main className="min-h-screen bg-[hsl(240,10%,4%)]">
             <Navbar />
+
+            {/* JSON-LD Structured Data */}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
 
             <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3 sm:py-6">
                 <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">

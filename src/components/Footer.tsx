@@ -24,7 +24,7 @@ export default async function Footer() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 sm:gap-8">
                     {/* About */}
                     <div className="col-span-2 sm:col-span-1">
-                        <h3 className="text-lg font-bold text-white mb-3">🔥 Lumina</h3>
+                        <h3 className="text-lg font-bold text-white mb-3">🔥 xxxmms</h3>
                         <p className="text-xs text-white/30 leading-relaxed">
                             The best desi videos aggregated from across the web. We don't host any content — all videos stream from external sources.
                         </p>
@@ -67,7 +67,7 @@ export default async function Footer() {
 
                 {/* Bottom bar */}
                 <div className="mt-8 pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-3 text-[10px] text-white/20">
-                    <span>© {new Date().getFullYear()} Lumina. All rights reserved. We do not host any content.</span>
+                    <span>© {new Date().getFullYear()} xxxmms. All rights reserved. We do not host any content.</span>
                     <div className="flex gap-4">
                         <span>18 U.S.C. 2257</span>
                         <span>DMCA</span>

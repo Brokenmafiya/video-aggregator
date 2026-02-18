@@ -3,12 +3,26 @@ import Footer from '@/components/Footer';
 import VideoCard from '@/components/VideoCard';
 import Pagination from '@/components/Pagination';
 import { getVideosByTag } from '@/lib/videos';
+import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
 
 interface PageProps {
     params: Promise<{ slug: string }>;
     searchParams: Promise<{ page?: string }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+    const { slug } = await params;
+    const tag = decodeURIComponent(slug);
+    const title = `${tag} Videos - Free ${tag} Porn & MMS`;
+    const description = `Watch free ${tag.toLowerCase()} videos and MMS. Best collection of ${tag.toLowerCase()} porn clips updated daily at xxxmms.`;
+    return {
+        title,
+        description,
+        keywords: [tag.toLowerCase(), `${tag.toLowerCase()} sex`, `${tag.toLowerCase()} videos`, 'desi mms', 'indian porn', 'xxxmms'],
+        alternates: { canonical: `https://xxxmms.vercel.app/tag/${encodeURIComponent(tag)}` },
+    };
 }
 
 export default async function TagPage({ params, searchParams }: PageProps) {

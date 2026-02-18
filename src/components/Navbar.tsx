@@ -57,7 +57,7 @@ export default function Navbar() {
 
                         {/* Logo */}
                         <Link href="/" className="text-xl sm:text-2xl font-bold tracking-tight text-white hover:text-[hsl(265,89%,66%)] transition-colors shrink-0">
-                            🔥 Lumina
+                            🔥 xxxmms
                         </Link>
 
                         {/* Desktop Search */}

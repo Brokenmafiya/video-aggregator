@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 import { getVideos, getAllTags } from '@/lib/videos';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-    const baseUrl = 'https://Mmsbpxxx.xyz';
+    const baseUrl = 'https://xxxmms.vercel.app';
 
     // Get all videos
     const videos = await getVideos();

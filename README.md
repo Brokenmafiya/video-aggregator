@@ -1,4 +1,4 @@
-# 🎬 Lumina - Video Aggregator
+# 🎬 xxxmms - Video Aggregator
 
 A full-featured, modern video aggregation platform built with Next.js 16 and Turso (Cloud SQLite). Designed for serverless deployment with support for 2,000+ videos, real-time scraping, and premium tube-site aesthetics.
 
@@ -260,7 +260,7 @@ CREATE INDEX idx_videos_views ON videos(views);
 
 ### Branding
 Edit `src/components/Navbar.tsx` and `src/components/Footer.tsx`:
-- Change site name from "Lumina"
+- Change site name from "xxxmms"
 - Update logo/favicon in `/public`
 
 ### Categories

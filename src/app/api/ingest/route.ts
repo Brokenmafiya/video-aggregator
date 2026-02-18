@@ -28,7 +28,16 @@ export async function POST(request: NextRequest) {
             'masahub.com',
             'desisexyvideos.com',
             'xxxvideo.link',
-            'stream.pkpornhub.com'
+            'stream.pkpornhub.com',
+            'desixx.net',
+            'indianporn.xxx',
+            'desiporn.tube',
+            'fsicomics.com',
+            'becdn.net',
+            'fry99.guru',
+            'luluvid.com',
+            'fsiblog.run',
+            'aagmaaldload.com'
         ];
 
         let isAllowed = false;

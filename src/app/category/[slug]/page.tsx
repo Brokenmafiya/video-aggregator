@@ -4,12 +4,26 @@ import VideoCard from '@/components/VideoCard';
 import Pagination from '@/components/Pagination';
 import { getVideosByCategory } from '@/lib/videos';
 import { notFound } from 'next/navigation';
+import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
 
 interface PageProps {
     params: Promise<{ slug: string }>;
     searchParams: Promise<{ page?: string }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+    const { slug } = await params;
+    const name = slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    const title = `${name} Videos - Free Desi ${name} Porn`;
+    const description = `Watch free ${name.toLowerCase()} sex videos and MMS clips. Best ${name.toLowerCase()} porn collection updated daily at xxxmms.`;
+    return {
+        title,
+        description,
+        keywords: [name.toLowerCase(), `${name.toLowerCase()} sex`, `${name.toLowerCase()} porn`, `${name.toLowerCase()} mms`, 'desi', 'indian', 'xxxmms'],
+        alternates: { canonical: `https://xxxmms.vercel.app/category/${slug}` },
+    };
 }
 
 export default async function CategoryPage({ params, searchParams }: PageProps) {
