@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
         try {
             const url = new URL(body.embed_url);
             isAllowed = allowedDomains.some(domain => url.hostname.endsWith(domain));
-        } catch (e) {
+        } catch {
             // If it's not a full URL, check if it's a relative path or has a dot (simple check)
             isAllowed = body.embed_url.includes('.mp4') || body.embed_url.includes('.webm');
         }

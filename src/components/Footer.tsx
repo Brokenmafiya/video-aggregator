@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getAllTags, getCategories } from '@/lib/videos';
+import { getAllTags } from '@/lib/videos';
 
 const STATIC_CATEGORIES = [
     { name: 'Indian', slug: 'indian' },
@@ -26,7 +26,7 @@ export default async function Footer() {
                     <div className="col-span-2 sm:col-span-1">
                         <h3 className="text-lg font-bold text-white mb-3">🔥 xxxmms</h3>
                         <p className="text-xs text-white/30 leading-relaxed">
-                            The best desi videos aggregated from across the web. We don't host any content — all videos stream from external sources.
+                            The best desi videos aggregated from across the web. We don&apos;t host any content — all videos stream from external sources.
                         </p>
                     </div>
 

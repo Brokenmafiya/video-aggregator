@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 require('dotenv').config();
 const Database = require('better-sqlite3');
 const { createClient } = require('@libsql/client');

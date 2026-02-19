@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-unused-vars */
 require('dotenv').config();
 const cheerio = require('cheerio');
 const { createClient } = require('@libsql/client');

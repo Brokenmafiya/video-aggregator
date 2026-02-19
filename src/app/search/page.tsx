@@ -29,7 +29,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
                         <>
                             <div className="flex items-center gap-2">
                                 <span className="text-white/30 text-sm">Results for:</span>
-                                <h1 className="text-xl sm:text-2xl font-bold text-white">"{query}"</h1>
+                                <h1 className="text-xl sm:text-2xl font-bold text-white">&quot;{query}&quot;</h1>
                             </div>
                             <p className="text-sm text-white/30 mt-1">{total} videos found</p>
                         </>
